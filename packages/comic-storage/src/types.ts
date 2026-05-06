@@ -30,11 +30,33 @@ export interface ListComicsOptions {
   offset?: number;
 }
 
+export interface Bookmark {
+  id: string;
+  comicId: string;
+  page: number;
+  label?: string;
+  createdAt: string;
+}
+
 export interface ReadingStateRecord {
   id: string;
   state: ReadingState;
   updatedAt: string;
 }
+
+export interface Preferences {
+  theme: "system" | "light" | "dark";
+  defaultFitMode: "width" | "height" | "best" | "original";
+  defaultReadingDirection: "ltr" | "rtl";
+  defaultViewMode: "single" | "spread" | "strip";
+}
+
+export const DEFAULT_PREFERENCES: Preferences = {
+  theme: "system",
+  defaultFitMode: "best",
+  defaultReadingDirection: "ltr",
+  defaultViewMode: "single",
+};
 
 /**
  * Storage contract used by the rest of the platform.
@@ -54,6 +76,13 @@ export interface ComicStorage {
 
   setArchiveBlob(id: string, blob: Blob): Promise<void>;
   getArchiveBlob(id: string): Promise<Blob | undefined>;
+
+  getPreferences(): Promise<Preferences | undefined>;
+  setPreferences(p: Preferences): Promise<void>;
+
+  addBookmark(bm: Bookmark): Promise<void>;
+  listBookmarks(comicId: string): Promise<Bookmark[]>;
+  removeBookmark(id: string): Promise<void>;
 
   clear(): Promise<void>;
 }

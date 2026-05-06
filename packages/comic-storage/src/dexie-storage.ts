@@ -3,9 +3,11 @@ import type { ReadingState } from "@comics-platform/comic-core";
 import type {
   BlobKind,
   BlobStore,
+  Bookmark,
   ComicStorage,
   LibraryRecord,
   ListComicsOptions,
+  Preferences,
   ReadingStateRecord,
 } from "./types.js";
 import { OpfsBlobStore, OpfsUnavailableError, isOpfsAvailable } from "./opfs-store.js";
@@ -32,6 +34,7 @@ export class DexieComicStorage extends Dexie implements ComicStorage {
   readingStates!: EntityTable<ReadingStateRecord, "id">;
   blobs!: EntityTable<BlobRow, "key">;
   meta!: EntityTable<MetaRow, "key">;
+  bookmarks!: EntityTable<Bookmark, "id">;
 
   private readonly opfs: BlobStore | null;
 
@@ -43,6 +46,14 @@ export class DexieComicStorage extends Dexie implements ComicStorage {
       readingStates: "id, updatedAt",
       blobs: "key, id, kind",
       meta: "key",
+    });
+    this.version(2).stores({
+      library:
+        "id, title, format, sourceName, addedAt, updatedAt, lastReadPage, pageCount, coverCacheKey",
+      readingStates: "id, updatedAt",
+      blobs: "key, id, kind",
+      meta: "key",
+      bookmarks: "id, comicId, createdAt",
     });
     this.opfs = opts.opfs ?? null;
   }
@@ -72,10 +83,12 @@ export class DexieComicStorage extends Dexie implements ComicStorage {
       this.library,
       this.readingStates,
       this.blobs,
+      this.bookmarks,
       async () => {
         await this.library.delete(id);
         await this.readingStates.delete(id);
         await this.blobs.where("id").equals(id).delete();
+        await this.bookmarks.where("comicId").equals(id).delete();
       },
     );
     if (this.opfs) {
@@ -112,18 +125,37 @@ export class DexieComicStorage extends Dexie implements ComicStorage {
     return await this.getBlob(id, "archive");
   }
 
+  async getPreferences(): Promise<Preferences | undefined> {
+    const row = await this.meta.get("preferences");
+    return row?.value as Preferences | undefined;
+  }
+
+  async setPreferences(p: Preferences): Promise<void> {
+    await this.meta.put({ key: "preferences", value: p });
+  }
+
+  async addBookmark(bm: Bookmark): Promise<void> {
+    await this.bookmarks.put(bm);
+  }
+
+  async listBookmarks(comicId: string): Promise<Bookmark[]> {
+    return await this.bookmarks.where("comicId").equals(comicId).toArray();
+  }
+
+  async removeBookmark(id: string): Promise<void> {
+    await this.bookmarks.delete(id);
+  }
+
   async clear(): Promise<void> {
     await this.transaction(
       "rw",
-      this.library,
-      this.readingStates,
-      this.blobs,
-      this.meta,
+      [this.library, this.readingStates, this.blobs, this.meta, this.bookmarks],
       async () => {
         await this.library.clear();
         await this.readingStates.clear();
         await this.blobs.clear();
         await this.meta.clear();
+        await this.bookmarks.clear();
       },
     );
     if (this.opfs) {

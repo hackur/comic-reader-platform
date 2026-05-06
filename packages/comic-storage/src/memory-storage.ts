@@ -1,8 +1,10 @@
 import type { ReadingState } from "@comics-platform/comic-core";
 import type {
+  Bookmark,
   ComicStorage,
   LibraryRecord,
   ListComicsOptions,
+  Preferences,
 } from "./types.js";
 
 /**
@@ -14,6 +16,8 @@ export class MemoryComicStorage implements ComicStorage {
   private readonly reading = new Map<string, ReadingState>();
   private readonly thumbs = new Map<string, Blob>();
   private readonly archives = new Map<string, Blob>();
+  private prefs: Preferences | undefined;
+  private readonly bookmarks = new Map<string, Bookmark>();
 
   async addComic(record: LibraryRecord): Promise<void> {
     this.library.set(record.id, { ...record });
@@ -48,6 +52,9 @@ export class MemoryComicStorage implements ComicStorage {
     this.reading.delete(id);
     this.thumbs.delete(id);
     this.archives.delete(id);
+    for (const [bmId, bm] of this.bookmarks) {
+      if (bm.comicId === id) this.bookmarks.delete(bmId);
+    }
   }
 
   async setReadingState(id: string, state: ReadingState): Promise<void> {
@@ -75,10 +82,34 @@ export class MemoryComicStorage implements ComicStorage {
     return this.archives.get(id);
   }
 
+  async getPreferences(): Promise<Preferences | undefined> {
+    return this.prefs ? { ...this.prefs } : undefined;
+  }
+
+  async setPreferences(p: Preferences): Promise<void> {
+    this.prefs = { ...p };
+  }
+
+  async addBookmark(bm: Bookmark): Promise<void> {
+    this.bookmarks.set(bm.id, { ...bm });
+  }
+
+  async listBookmarks(comicId: string): Promise<Bookmark[]> {
+    return Array.from(this.bookmarks.values())
+      .filter((bm) => bm.comicId === comicId)
+      .map((bm) => ({ ...bm }));
+  }
+
+  async removeBookmark(id: string): Promise<void> {
+    this.bookmarks.delete(id);
+  }
+
   async clear(): Promise<void> {
     this.library.clear();
     this.reading.clear();
     this.thumbs.clear();
     this.archives.clear();
+    this.bookmarks.clear();
+    this.prefs = undefined;
   }
 }
