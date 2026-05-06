@@ -1,0 +1,16 @@
+sample.cbz
+==========
+
+Auto-generated demo comic for the open-source comic reader.
+Created by tools/scripts/generate-sample-cbz.mjs.
+
+Contents:
+  - 8 PNG pages at 1200x1800 (gradient + bitmap-font label)
+  - ComicInfo.xml with Series=Sample, Number=1, PageCount=8,
+    Title="Sample Reader Demo"
+
+Format: store-only ZIP (compression method 0). Hand-rolled PNG encoder
+and ZIP writer using only Node 22+ built-ins (node:zlib for deflate).
+
+Regenerate with:
+  node tools/scripts/generate-sample-cbz.mjs

@@ -1,0 +1,40 @@
+{
+  "name": "@comics-platform/web",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "scripts": {
+    "build": "next build",
+    "dev": "next dev",
+    "lint": "eslint .",
+    "start": "next start",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "next": "^16.2.4",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "@comics-platform/comic-core": "workspace:*",
+    "@comics-platform/comic-react": "workspace:*",
+    "@comics-platform/comic-storage": "workspace:*",
+    "@comics-platform/comic-extractor-zip": "workspace:*",
+    "@comics-platform/comic-extractor-tar": "workspace:*",
+    "@comics-platform/comic-extractor-pdf": "workspace:*",
+    "@comics-platform/comic-extractor-images": "workspace:*",
+    "@comics-platform/comic-extractor-rar": "workspace:*",
+    "@tanstack/react-query": "^5.100.9",
+    "framer-motion": "^12.38.0",
+    "lucide-react": "^1.14.0",
+    "tailwindcss": "^4.2.4"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.2.4",
+    "@types/node": "^25.6.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "postcss": "^8.5.14",
+    "typescript": "^6.0.3"
+  }
+}

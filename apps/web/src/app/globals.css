@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+:root {
+  --page-ink: oklch(0.24 0.03 259);
+  --page-muted: oklch(0.56 0.03 257);
+  --page-panel: oklch(1 0 0 / 0.72);
+  --page-line: oklch(0.86 0.02 255 / 0.9);
+  --page-accent: oklch(0.66 0.18 226);
+  --page-accent-soft: oklch(0.93 0.04 220);
+  --page-warm: oklch(0.83 0.11 82);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: light;
+}
+
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, color-mix(in oklab, var(--page-accent-soft) 82%, white) 0%, transparent 34%),
+    radial-gradient(circle at 85% 18%, color-mix(in oklab, var(--page-warm) 24%, white) 0%, transparent 28%),
+    linear-gradient(180deg, #fff9f0 0%, #f7f8ff 46%, #eef3ff 100%);
+  color: var(--page-ink);
+}
+
+::selection {
+  background: color-mix(in oklab, var(--page-accent) 24%, white);
+}

@@ -1,0 +1,29 @@
+{
+  "name": "comics-platform",
+  "private": true,
+  "packageManager": "pnpm@10.33.3",
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "scripts": {
+    "build": "turbo build",
+    "build:web": "pnpm --filter @comics-platform/web build",
+    "dev": "turbo dev",
+    "dev:web": "pnpm --filter @comics-platform/web dev",
+    "deploy:pages": "pnpm build:web && npx wrangler@4.88.0 pages deploy apps/web/out",
+    "lint": "turbo lint",
+    "test": "turbo test",
+    "clean": "turbo clean",
+    "typecheck": "turbo typecheck",
+    "typecheck:web": "pnpm --filter @comics-platform/web typecheck"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.3.0",
+    "globals": "^17.6.0",
+    "prettier": "^3.8.3",
+    "turbo": "^2.9.9",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.59.2"
+  }
+}

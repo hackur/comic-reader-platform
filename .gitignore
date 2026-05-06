@@ -1,0 +1,26 @@
+node_modules
+dist
+build
+.next
+out
+coverage
+.turbo
+*.log
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+.DS_Store
+.idea
+.vscode
+.wrangler
+.claude
+*.local
+
+# OS junk
+Thumbs.db
+
+# Local conversation/working artifacts (large, not source)
+original-convo.md
+copilot_all_prompts_*.json
+json-entire-build-tools-included.json

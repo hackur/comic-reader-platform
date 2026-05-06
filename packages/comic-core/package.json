@@ -1,0 +1,30 @@
+{
+  "name": "@comics-platform/comic-core",
+  "version": "0.1.0",
+  "description": "Format-agnostic core types and registry for the Comic Reader Platform",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src",
+    "test": "vitest run"
+  },
+  "keywords": ["comics", "comic", "cbr", "cbz", "cbt", "typescript", "extensible"],
+  "author": "Comics Platform Contributors",
+  "license": "MIT",
+  "devDependencies": {
+    "happy-dom": "^15.11.7",
+    "typescript": "^6.0.3",
+    "vitest": "^2.1.8"
+  }
+}

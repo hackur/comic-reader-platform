@@ -1,0 +1,34 @@
+{
+  "name": "@comics-platform/comic-extractor-tar",
+  "version": "0.1.0",
+  "description": "CBT/TAR extractor for the comics platform, with a small pure-TS USTAR parser",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "keywords": ["comics", "cbt", "tar", "extractor"],
+  "author": "Comics Platform Contributors",
+  "license": "MIT",
+  "dependencies": {
+    "@comics-platform/comic-core": "workspace:*"
+  },
+  "devDependencies": {
+    "happy-dom": "^15.11.7",
+    "typescript": "^6.0.3",
+    "vitest": "^2.1.8"
+  }
+}

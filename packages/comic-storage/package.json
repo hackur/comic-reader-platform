@@ -1,0 +1,33 @@
+{
+  "name": "@comics-platform/comic-storage",
+  "version": "0.1.0",
+  "description": "Browser persistence (IndexedDB + OPFS) for the comic platform",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src",
+    "test": "vitest run"
+  },
+  "keywords": ["comics", "indexeddb", "opfs", "dexie", "storage"],
+  "author": "Comics Platform Contributors",
+  "license": "MIT",
+  "dependencies": {
+    "@comics-platform/comic-core": "workspace:*",
+    "dexie": "^4.4.2"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.3",
+    "vitest": "^2.1.8"
+  }
+}

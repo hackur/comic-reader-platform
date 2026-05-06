@@ -1,0 +1,45 @@
+{
+  "name": "@comics-platform/comic-worker",
+  "version": "0.1.0",
+  "description": "Off-main-thread comic extraction harness using Comlink",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./worker": {
+      "types": "./dist/comic-worker.d.ts",
+      "import": "./dist/comic-worker.js"
+    },
+    "./client": {
+      "types": "./dist/client.d.ts",
+      "import": "./dist/client.js"
+    },
+    "./thumbnail": {
+      "types": "./dist/thumbnail.d.ts",
+      "import": "./dist/thumbnail.js"
+    },
+    "./src/*": "./src/*"
+  },
+  "files": ["dist", "src"],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src"
+  },
+  "keywords": ["comics", "worker", "comlink", "extraction"],
+  "author": "Comics Platform Contributors",
+  "license": "MIT",
+  "dependencies": {
+    "@comics-platform/comic-core": "workspace:*",
+    "comlink": "^4.4.2"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.3"
+  }
+}
