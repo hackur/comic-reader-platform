@@ -6,10 +6,12 @@ import { useReadingState } from '../state/ReadingStateContext'
 export interface KeyboardNavOptions {
   enabled?: boolean
   target?: HTMLElement | Window | null
+  onHelp?: () => void
+  onBookmark?: () => void
 }
 
 export function useKeyboardNav(options: KeyboardNavOptions = {}): void {
-  const { enabled = true, target } = options
+  const { enabled = true, target, onHelp, onBookmark } = options
   const {
     nextPage,
     prevPage,
@@ -78,6 +80,19 @@ export function useKeyboardNav(options: KeyboardNavOptions = {}): void {
         case 'F':
           setFit('best')
           break
+        case '?':
+          if (onHelp) {
+            e.preventDefault()
+            onHelp()
+          }
+          break
+        case 'b':
+        case 'B':
+          if (onBookmark) {
+            e.preventDefault()
+            onBookmark()
+          }
+          break
         default:
           break
       }
@@ -97,5 +112,7 @@ export function useKeyboardNav(options: KeyboardNavOptions = {}): void {
     rotate,
     setFit,
     readingDirection,
+    onHelp,
+    onBookmark,
   ])
 }

@@ -1,4 +1,3 @@
-// Existing
 export { ComicDropzone } from './ComicDropzone'
 
 // State
@@ -12,15 +11,29 @@ export type {
   ReadingStateProviderProps,
 } from './state/ReadingStateContext'
 
-export { LibraryProvider, useComicLibrary } from './state/LibraryContext'
+export {
+  LibraryProvider,
+  useComicLibrary,
+  useLibraryError,
+} from './state/LibraryContext'
 export type {
+  Bookmark,
   ComicStorage,
   LibraryContextValue,
+  LibraryFormatFilter,
   LibraryProviderProps,
   LibraryRecord,
   LibraryImporter,
   LibrarySort,
 } from './state/LibraryContext'
+
+export { ThemeProvider, useTheme } from './state/ThemeContext'
+export type {
+  ResolvedTheme,
+  ThemeContextValue,
+  ThemePreference,
+  ThemeProviderProps,
+} from './state/ThemeContext'
 
 export { ExtractorProvider, useExtractorRegistry } from './state/ExtractorContext'
 export type {
@@ -39,6 +52,8 @@ export type {
 } from './hooks/useTouchSwipe'
 export { usePagePreloader } from './hooks/usePagePreloader'
 export type { PreloaderOptions } from './hooks/usePagePreloader'
+export { useBookmarks } from './hooks/useBookmarks'
+export type { UseBookmarksResult } from './hooks/useBookmarks'
 
 // Viewer
 export { ComicViewer } from './viewer/ComicViewer'
@@ -53,6 +68,12 @@ export { ThumbnailRail } from './viewer/ThumbnailRail'
 export type { ThumbnailRailProps } from './viewer/ThumbnailRail'
 export { ComicReaderShell } from './viewer/ComicReaderShell'
 export type { ComicReaderShellProps } from './viewer/ComicReaderShell'
+export { ShortcutsModal } from './viewer/ShortcutsModal'
+export type { ShortcutsModalProps } from './viewer/ShortcutsModal'
+export { MetadataPanel } from './viewer/MetadataPanel'
+export type { MetadataPanelProps } from './viewer/MetadataPanel'
+export { BookmarksPanel } from './viewer/BookmarksPanel'
+export type { BookmarksPanelProps } from './viewer/BookmarksPanel'
 
 // Library
 export { ComicGridLibrary } from './library/ComicGridLibrary'
@@ -61,3 +82,5 @@ export { ComicCard } from './library/ComicCard'
 export type { ComicCardProps } from './library/ComicCard'
 export { ImportButton } from './library/ImportButton'
 export type { ImportButtonProps } from './library/ImportButton'
+export { LibrarySearchBar } from './library/LibrarySearchBar'
+export type { LibrarySearchBarProps } from './library/LibrarySearchBar'

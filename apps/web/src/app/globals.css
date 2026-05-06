@@ -15,7 +15,24 @@
 }
 
 html {
-  color-scheme: light;
+  color-scheme: light dark;
+}
+
+html[data-theme='dark'] {
+  --page-ink: oklch(0.92 0.02 255);
+  --page-muted: oklch(0.66 0.02 255);
+  --page-panel: oklch(0.20 0.02 255 / 0.78);
+  --page-line: oklch(0.32 0.02 255 / 0.85);
+  --page-accent: oklch(0.72 0.18 226);
+  --page-accent-soft: oklch(0.30 0.04 220);
+  --page-warm: oklch(0.50 0.10 82);
+}
+html[data-theme='dark'] body {
+  background:
+    radial-gradient(circle at top left, color-mix(in oklab, var(--page-accent-soft) 60%, black) 0%, transparent 34%),
+    radial-gradient(circle at 85% 18%, color-mix(in oklab, var(--page-warm) 18%, black) 0%, transparent 28%),
+    linear-gradient(180deg, #0c1018 0%, #0e1322 46%, #131a2e 100%);
+  color: var(--page-ink);
 }
 
 body {

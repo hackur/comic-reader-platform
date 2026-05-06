@@ -44,10 +44,25 @@ export function PageImage({ page, alt, className = '', style, onLoad }: PageImag
     return () => {
       cancelled = true
       if (createdUrl) {
-        try {
-          URL.revokeObjectURL(createdUrl)
-        } catch {
-          /* noop */
+        // Defer revocation so a fast-switching parent (e.g. the page
+        // preloader or rapid prev/next) does not yank the URL out from
+        // under an <img> that is still loading. 5s is a comfortable upper
+        // bound for image decode while keeping memory pressure bounded.
+        const url = createdUrl
+        const revoke = () => {
+          try {
+            URL.revokeObjectURL(url)
+          } catch {
+            /* noop */
+          }
+        }
+        const w = globalThis as unknown as {
+          requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number
+        }
+        if (typeof w.requestIdleCallback === 'function') {
+          w.requestIdleCallback(revoke, { timeout: 5000 })
+        } else {
+          setTimeout(revoke, 5000)
         }
       }
     }

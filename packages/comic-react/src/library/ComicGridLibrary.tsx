@@ -7,6 +7,7 @@ export interface ComicGridLibraryProps {
   comics: ComicLibraryItem[]
   onOpen: (id: string) => void
   onDelete?: (id: string) => void
+  loadThumbnail?: (id: string) => Promise<Blob | undefined>
   emptyState?: React.ReactNode
   className?: string
 }
@@ -15,6 +16,7 @@ export function ComicGridLibrary({
   comics,
   onOpen,
   onDelete,
+  loadThumbnail,
   emptyState,
   className = '',
 }: ComicGridLibraryProps) {
@@ -34,7 +36,12 @@ export function ComicGridLibrary({
     >
       {comics.map((comic) => (
         <li key={comic.id}>
-          <ComicCard comic={comic} onOpen={onOpen} onDelete={onDelete} />
+          <ComicCard
+            comic={comic}
+            onOpen={onOpen}
+            onDelete={onDelete}
+            loadThumbnail={loadThumbnail}
+          />
         </li>
       ))}
     </ul>

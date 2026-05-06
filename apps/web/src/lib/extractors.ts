@@ -30,7 +30,10 @@ export function buildRegistry(): ExtractorRegistry {
 export async function getPdfExtractor(): Promise<ComicExtractor> {
   if (!pdfLoadPromise) {
     pdfLoadPromise = import('@comics-platform/comic-extractor-pdf').then(
-      (mod) => new mod.PdfComicExtractor(),
+      (mod) => {
+        mod.configurePdfWorker('/vendor/pdfjs/pdf.worker.min.mjs')
+        return new mod.PdfComicExtractor()
+      },
     )
   }
   return pdfLoadPromise
@@ -46,7 +49,10 @@ export async function ensurePdfSupport(
 export async function getRarExtractor(): Promise<ComicExtractor> {
   if (!rarLoadPromise) {
     rarLoadPromise = import('@comics-platform/comic-extractor-rar').then(
-      (mod) => new mod.RarComicExtractor(),
+      (mod) => {
+        mod.configureRarWorker('/vendor/libarchive/worker-bundle.js')
+        return new mod.RarComicExtractor()
+      },
     )
   }
   return rarLoadPromise

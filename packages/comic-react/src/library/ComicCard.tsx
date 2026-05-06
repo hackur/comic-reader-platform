@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { Trash2 } from 'lucide-react'
 import type { ComicLibraryItem } from '@comics-platform/comic-core'
 
@@ -7,6 +8,12 @@ export interface ComicCardProps {
   comic: ComicLibraryItem
   onOpen: (id: string) => void
   onDelete?: (id: string) => void
+  /**
+   * Optional thumbnail loader. When provided, the card asynchronously fetches
+   * a Blob for `comic.id`, creates an object URL, and revokes it on unmount
+   * or comic change.
+   */
+  loadThumbnail?: (id: string) => Promise<Blob | undefined>
   className?: string
 }
 
@@ -23,12 +30,51 @@ function formatRelative(date?: Date): string | null {
   return `${d}d ago`
 }
 
-export function ComicCard({ comic, onOpen, onDelete, className = '' }: ComicCardProps) {
+export function ComicCard({
+  comic,
+  onOpen,
+  onDelete,
+  loadThumbnail,
+  className = '',
+}: ComicCardProps) {
   const lastRead = formatRelative(comic.lastRead)
   const progress =
     typeof comic.progress === 'number'
       ? Math.min(100, Math.max(0, Math.round(comic.progress * 100)))
       : null
+
+  const [thumbUrl, setThumbUrl] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!loadThumbnail) {
+      setThumbUrl(null)
+      return
+    }
+    let cancelled = false
+    let createdUrl: string | null = null
+    void (async () => {
+      try {
+        const blob = await loadThumbnail(comic.id)
+        if (cancelled || !blob) return
+        createdUrl = URL.createObjectURL(blob)
+        setThumbUrl(createdUrl)
+      } catch {
+        /* thumbnail is best-effort */
+      }
+    })()
+    return () => {
+      cancelled = true
+      if (createdUrl) {
+        try {
+          URL.revokeObjectURL(createdUrl)
+        } catch {
+          /* noop */
+        }
+      }
+    }
+  }, [comic.id, loadThumbnail])
+
+  const coverSrc = comic.coverUrl ?? thumbUrl
 
   return (
     <article
@@ -40,9 +86,9 @@ export function ComicCard({ comic, onOpen, onDelete, className = '' }: ComicCard
         className="relative aspect-[2/3] w-full overflow-hidden bg-slate-200"
         aria-label={`Open ${comic.title}`}
       >
-        {comic.coverUrl ? (
+        {coverSrc ? (
           <img
-            src={comic.coverUrl}
+            src={coverSrc}
             alt={comic.title}
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
             draggable={false}

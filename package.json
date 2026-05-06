@@ -15,7 +15,8 @@
     "test": "turbo test",
     "clean": "turbo clean",
     "typecheck": "turbo typecheck",
-    "typecheck:web": "pnpm --filter @comics-platform/web typecheck"
+    "typecheck:web": "pnpm --filter @comics-platform/web typecheck",
+    "vendor:copy": "node tools/scripts/copy-vendor-assets.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

@@ -2,8 +2,10 @@
 
 import {
   ArrowLeftRight,
+  Bookmark,
   BookOpen,
   Columns2,
+  Info,
   Maximize2,
   Minimize2,
   RotateCw,
@@ -21,6 +23,9 @@ import { useReadingState } from '../state/ReadingStateContext'
 export interface ViewerToolbarProps {
   title: string
   onClose?: () => void
+  onInfo?: () => void
+  onBookmarks?: () => void
+  bookmarksActive?: boolean
   className?: string
 }
 
@@ -58,7 +63,14 @@ function Group({ children }: { children: ReactNode }) {
   )
 }
 
-export function ViewerToolbar({ title, onClose, className = '' }: ViewerToolbarProps) {
+export function ViewerToolbar({
+  title,
+  onClose,
+  onInfo,
+  onBookmarks,
+  bookmarksActive,
+  className = '',
+}: ViewerToolbarProps) {
   const {
     currentPage,
     pageCount,
@@ -78,6 +90,8 @@ export function ViewerToolbar({ title, onClose, className = '' }: ViewerToolbarP
 
   return (
     <div
+      role="toolbar"
+      aria-label="Comic viewer controls"
       className={`flex w-full flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/80 bg-white/70 px-4 py-3 shadow-[0_18px_60px_-30px_rgba(15,23,42,0.45)] backdrop-blur ${className}`}
     >
       <div className="flex min-w-0 items-center gap-3">
@@ -174,6 +188,26 @@ export function ViewerToolbar({ title, onClose, className = '' }: ViewerToolbarP
             }}
           />
         </Group>
+
+        {onInfo || onBookmarks ? (
+          <Group>
+            {onInfo ? (
+              <ToolbarIcon
+                icon={Info}
+                label="Comic information"
+                onClick={onInfo}
+              />
+            ) : null}
+            {onBookmarks ? (
+              <ToolbarIcon
+                icon={Bookmark}
+                label="Bookmarks"
+                onClick={onBookmarks}
+                active={bookmarksActive}
+              />
+            ) : null}
+          </Group>
+        ) : null}
       </div>
     </div>
   )

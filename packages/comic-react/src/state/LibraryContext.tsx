@@ -9,6 +9,9 @@ import {
   useState,
 } from 'react'
 import type { ReactNode } from 'react'
+import {
+  ComicError,
+} from '@comics-platform/comic-core'
 import type {
   ComicFormat,
   ComicLibraryItem,
@@ -37,6 +40,14 @@ export interface LibraryRecord {
   metadata?: unknown
 }
 
+export interface Bookmark {
+  id: string
+  comicId: string
+  page: number
+  label?: string
+  createdAt: string
+}
+
 export interface ComicStorage {
   addComic(record: LibraryRecord): Promise<void>
   getComic(id: string): Promise<LibraryRecord | undefined>
@@ -48,6 +59,9 @@ export interface ComicStorage {
   getThumbnail(id: string): Promise<Blob | undefined>
   setArchiveBlob(id: string, blob: Blob): Promise<void>
   getArchiveBlob(id: string): Promise<Blob | undefined>
+  addBookmark(bm: Bookmark): Promise<void>
+  listBookmarks(comicId: string): Promise<Bookmark[]>
+  removeBookmark(id: string): Promise<void>
   clear(): Promise<void>
 }
 
@@ -60,16 +74,27 @@ export type LibraryImporter = (source: ComicSource) => Promise<LibraryRecord>
 
 export type LibrarySort = 'lastRead' | 'addedAt' | 'title'
 
+export type LibraryFormatFilter = ComicFormat | 'all'
+
 export interface LibraryContextValue {
   comics: ComicLibraryItem[]
   loading: boolean
-  error: Error | null
+  error: ComicError | Error | null
   sort: LibrarySort
   setSort: (sort: LibrarySort) => void
+  query: string
+  setQuery: (q: string) => void
+  formatFilter: LibraryFormatFilter
+  setFormatFilter: (f: LibraryFormatFilter) => void
   importSource: (source: ComicSource) => Promise<LibraryRecord>
   remove: (id: string) => Promise<void>
   setLastRead: (id: string, page: number) => Promise<void>
   refresh: () => Promise<void>
+  clearError: () => void
+  getThumbnail: (id: string) => Promise<Blob | undefined>
+  addBookmark: (bm: Bookmark) => Promise<void>
+  listBookmarks: (comicId: string) => Promise<Bookmark[]>
+  removeBookmark: (id: string) => Promise<void>
 }
 
 const LibraryContext = createContext<LibraryContextValue | null>(null)
@@ -124,8 +149,10 @@ export function LibraryProvider({
 }: LibraryProviderProps) {
   const [comics, setComics] = useState<ComicLibraryItem[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<Error | null>(null)
+  const [error, setError] = useState<ComicError | Error | null>(null)
   const [sort, setSort] = useState<LibrarySort>(initialSort)
+  const [query, setQuery] = useState<string>('')
+  const [formatFilter, setFormatFilter] = useState<LibraryFormatFilter>('all')
 
   const refresh = useCallback(async () => {
     setLoading(true)
@@ -146,11 +173,43 @@ export function LibraryProvider({
 
   const importSource = useCallback(
     async (source: ComicSource) => {
-      const record = await importer(source)
-      await refresh()
-      return record
+      try {
+        const record = await importer(source)
+        setError(null)
+        await refresh()
+        return record
+      } catch (err) {
+        const wrapped =
+          err instanceof Error ? err : new Error(String(err))
+        setError(wrapped)
+        throw wrapped
+      }
     },
     [importer, refresh],
+  )
+
+  const clearError = useCallback(() => {
+    setError(null)
+  }, [])
+
+  const getThumbnail = useCallback(
+    (id: string) => storage.getThumbnail(id),
+    [storage],
+  )
+
+  const addBookmark = useCallback(
+    (bm: Bookmark) => storage.addBookmark(bm),
+    [storage],
+  )
+
+  const listBookmarks = useCallback(
+    (comicId: string) => storage.listBookmarks(comicId),
+    [storage],
+  )
+
+  const removeBookmark = useCallback(
+    (id: string) => storage.removeBookmark(id),
+    [storage],
   )
 
   const remove = useCallback(
@@ -180,21 +239,54 @@ export function LibraryProvider({
     [storage, refresh],
   )
 
-  const sorted = useMemo(() => sortComics(comics, sort), [comics, sort])
+  const filteredSorted = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    const filtered = comics.filter((c) => {
+      if (formatFilter !== 'all' && c.format !== formatFilter) return false
+      if (q.length > 0 && !c.title.toLowerCase().includes(q)) return false
+      return true
+    })
+    return sortComics(filtered, sort)
+  }, [comics, sort, query, formatFilter])
 
   const value = useMemo<LibraryContextValue>(
     () => ({
-      comics: sorted,
+      comics: filteredSorted,
       loading,
       error,
       sort,
       setSort,
+      query,
+      setQuery,
+      formatFilter,
+      setFormatFilter,
       importSource,
       remove,
       setLastRead,
       refresh,
+      clearError,
+      getThumbnail,
+      addBookmark,
+      listBookmarks,
+      removeBookmark,
     }),
-    [sorted, loading, error, sort, importSource, remove, setLastRead, refresh],
+    [
+      filteredSorted,
+      loading,
+      error,
+      sort,
+      query,
+      formatFilter,
+      importSource,
+      remove,
+      setLastRead,
+      refresh,
+      clearError,
+      getThumbnail,
+      addBookmark,
+      listBookmarks,
+      removeBookmark,
+    ],
   )
 
   return <LibraryContext.Provider value={value}>{children}</LibraryContext.Provider>
@@ -206,4 +298,12 @@ export function useComicLibrary(): LibraryContextValue {
     throw new Error('useComicLibrary must be used within a LibraryProvider')
   }
   return ctx
+}
+
+/**
+ * Convenience hook that returns the most recent error from the library
+ * context (e.g. an extractor failure). Returns null when there is no error.
+ */
+export function useLibraryError(): ComicError | Error | null {
+  return useComicLibrary().error
 }

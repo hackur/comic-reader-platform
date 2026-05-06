@@ -6,6 +6,14 @@ export class ExtractorRegistry {
   private readonly extractors = new Map<ComicFormat, ComicExtractor>();
 
   register(format: ComicFormat, extractor: ComicExtractor): void {
+    if (this.extractors.has(format)) {
+      // Overwrite-with-warn rather than throwing so HMR re-evaluation does
+      // not break the registry. Callers that want to assert single
+      // registration should check `has()` first.
+      console.warn(
+        `[comic-core] ExtractorRegistry: re-registering extractor for format "${format}"; overwriting previous entry.`,
+      );
+    }
     this.extractors.set(format, extractor);
   }
 

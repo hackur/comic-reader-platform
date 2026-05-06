@@ -40,4 +40,19 @@ describe.skipIf(typeof Blob === 'undefined')('detectFormat across all real fixtu
     const src = await blobSource('pdf/synthetic.pdf', 'synthetic.pdf', 'application/pdf')
     expect(await detectFormat(src)).toBe('pdf')
   })
+
+  // Regression: blobs without a recognized extension should still be
+  // identified by their magic bytes. A "mystery.bin" blob carrying the
+  // ZIP local-file header (PK\x03\x04) must resolve to 'cbz'.
+  it('unknown-extension blob with ZIP magic falls back to cbz', async () => {
+    const zipMagic = new Uint8Array([
+      0x50, 0x4b, 0x03, 0x04, 0x14, 0x00, 0x00, 0x00,
+    ])
+    const src = {
+      kind: 'blob' as const,
+      blob: new Blob([zipMagic], { type: 'application/octet-stream' }),
+      name: 'mystery.bin',
+    }
+    expect(await detectFormat(src)).toBe('cbz')
+  })
 })

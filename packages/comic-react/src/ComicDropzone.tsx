@@ -10,6 +10,12 @@ interface ComicDropzoneProps {
 }
 
 export function ComicDropzone({ onFileSelect, className = '' }: ComicDropzoneProps) {
+  // Audit (H): drop and click flows are mutually exclusive — a drag-drop
+  // fires `onDrop` (we copy files from `dataTransfer.files`) while the
+  // hidden `<input type="file">` only fires `onChange` from a click. There
+  // is no dual-fire path because we do not forward the drop event into
+  // the input. We still defensively clear `event.target.value` on the
+  // input change so re-selecting the same file re-fires the change event.
   const handleDrop = useCallback((event: DragEvent<HTMLDivElement>) => {
     event.preventDefault()
     const files = Array.from(event.dataTransfer.files)
@@ -17,6 +23,13 @@ export function ComicDropzone({ onFileSelect, className = '' }: ComicDropzonePro
       kind: 'file' as const,
       file
     }))
+    // Clear the dataTransfer so any bubbling handlers do not re-process
+    // the same files.
+    try {
+      event.dataTransfer.clearData()
+    } catch {
+      /* some browsers throw on clearData outside of dragstart */
+    }
     onFileSelect(sources)
   }, [onFileSelect])
 
@@ -26,6 +39,8 @@ export function ComicDropzone({ onFileSelect, className = '' }: ComicDropzonePro
       kind: 'file' as const,
       file
     }))
+    // Reset so picking the same file twice still triggers onChange.
+    event.target.value = ''
     onFileSelect(sources)
   }, [onFileSelect])
 
