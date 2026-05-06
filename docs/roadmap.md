@@ -34,7 +34,7 @@ The pitch: open a CBZ from disk and see its pages.
 - A Comlink-exposed Web Worker (`comic-worker`) that does archive opening off the main thread.
 - Cancellation via `AbortSignal` and progress events.
 
-## Phase 4 — Serious reader UX `in progress`
+## Phase 4 — Serious reader UX `done`
 
 The pitch: a reader you would actually want to use.
 
@@ -43,20 +43,25 @@ The pitch: a reader you would actually want to use.
 - `done` Vertical strip mode.
 - `done` Zoom (clamped to [0.25, 6]) and rotation.
 - `done` RTL toggle.
-- `done` Keyboard navigation (arrow keys, space, PgUp/PgDn, Home/End, +/-/0, R, F).
+- `done` Keyboard navigation (arrow keys, space, PgUp/PgDn, Home/End, +/-/0, R, F, B, ?).
 - `done` Touch / pointer gestures.
 - `done` Thumbnail rail and page slider.
-- `in progress` Page preloader heuristics (lookahead, prefetch on idle).
-- `planned` Bookmarks and annotations (per-comic, local).
+- `done` Page preloader (lookahead via `usePagePreloader`).
+- `done` Bookmarks (per-comic, persisted, cascade-deleted with the comic).
+- `done` ComicInfo.xml metadata side panel.
+- `done` Keyboard shortcuts modal (`?`).
+- `done` Light / dark / system theme.
+- `done` Settings page (theme, default fit/view/direction, library export/import, storage quota, clear library).
 
-## Phase 5 — Optional CBR path `in progress`
+## Phase 5 — Optional CBR path `done`
 
 The pitch: read your existing CBR collection without making CBR a first-class format.
 
 - `done` `@comics-platform/comic-extractor-rar` using `libarchive.js`.
 - `done` Read-only, plugin-shaped, registered explicitly.
 - `done` Password / encrypted-archive detection mapped to `PASSWORD_REQUIRED`.
-- `planned` Lazy registration so users who only read CBZ don't pay the WASM cost.
+- `done` Lazy registration — `apps/web` only `import()`s the RAR plugin (and its WASM) when a CBR is detected.
+- `done` `configureRarWorker(url)` for hosts that need a custom worker location.
 - `planned` UI affordance to enable / disable CBR support per-install.
 
 ## Phase 6 — More formats `in progress`
@@ -67,13 +72,15 @@ The pitch: read your existing CBR collection without making CBR a first-class fo
 - `planned` 7z / CB7 once a workable WASM build exists.
 - `future` Compressed tar variants (`.tar.gz`, `.tar.xz`).
 
-## Phase 7 — Library quality `planned`
+## Phase 7 — Library quality `in progress`
 
-- Search across titles and ComicInfo metadata.
-- ComicInfo enrichment from open metadata sources (ComicVine-compatible APIs), opt-in and rate-limited.
-- Reading lists / collections (smart and manual).
-- Sort and filter by series, tags, last-read, completion.
-- Export library as a portable archive (zip of metadata + blobs).
+- `done` Title search and format filter (`LibrarySearchBar`).
+- `done` Sort by last-read / added-at / title.
+- `done` JSON metadata export / import on the Settings page.
+- `planned` Search across ComicInfo metadata fields (writer, series, year).
+- `planned` ComicInfo enrichment from open metadata sources (ComicVine-compatible APIs), opt-in and rate-limited.
+- `planned` Reading lists / collections (smart and manual).
+- `planned` Portable archive export (zip of metadata + blobs) for full device-to-device migration.
 
 ## Phase 8 — Cloud sync `future`
 

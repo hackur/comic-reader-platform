@@ -25,6 +25,23 @@ export interface ComicReaderShellProps {
    * from LibraryContext so a LibraryProvider must be in scope.
    */
   enableBookmarks?: boolean
+  /**
+   * Fires whenever the current page changes. Useful for persisting reading
+   * progress to storage. Debounce in the host if needed.
+   */
+  onPageChange?: (page: number) => void
+}
+
+interface PageChangeBinderProps {
+  onChange: (page: number) => void
+}
+
+function PageChangeBinder({ onChange }: PageChangeBinderProps) {
+  const { currentPage } = useReadingState()
+  useEffect(() => {
+    onChange(currentPage)
+  }, [currentPage, onChange])
+  return null
 }
 
 interface BookmarkBinderProps {
@@ -59,6 +76,7 @@ export function ComicReaderShell({
   onClose,
   className = '',
   enableBookmarks = false,
+  onPageChange,
 }: ComicReaderShellProps) {
   const [showInfo, setShowInfo] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
@@ -117,6 +135,7 @@ export function ComicReaderShell({
         />
         <ShortcutsModal open={showHelp} onClose={() => setShowHelp(false)} />
         {enableBookmarks ? <BookmarkBinder comicId={book.id} /> : null}
+        {onPageChange ? <PageChangeBinder onChange={onPageChange} /> : null}
       </div>
     </ReadingStateProvider>
   )

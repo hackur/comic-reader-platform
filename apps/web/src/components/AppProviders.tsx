@@ -4,7 +4,9 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import {
   ExtractorProvider,
   LibraryProvider,
+  ThemeProvider,
   type LibraryImporter,
+  type ThemePreference,
 } from '@comics-platform/comic-react'
 import { detectFormat } from '@comics-platform/comic-core'
 import {
@@ -18,12 +20,18 @@ import { getStorage } from '@/lib/storage'
 export function AppProviders({ children }: { children: ReactNode }) {
   const registry = useMemo(() => buildRegistry(), [])
   const [storage, setStorage] = useState<ComicStorage | null>(null)
+  const [theme, setTheme] = useState<ThemePreference>('system')
 
   useEffect(() => {
     let cancelled = false
-    void getStorage().then((s) => {
-      if (!cancelled) setStorage(s)
-    })
+    void (async () => {
+      const s = await getStorage()
+      if (cancelled) return
+      setStorage(s)
+      const prefs = await s.getPreferences()
+      if (cancelled) return
+      if (prefs?.theme) setTheme(prefs.theme)
+    })()
     return () => {
       cancelled = true
     }
@@ -49,6 +57,12 @@ export function AppProviders({ children }: { children: ReactNode }) {
               : source.kind === 'images'
                 ? (source.name ?? `images-${id}`)
                 : `directory-${id}`
+      const fileSize =
+        source.kind === 'file'
+          ? source.file.size
+          : source.kind === 'blob'
+            ? source.blob.size
+            : undefined
       const record: LibraryRecord = {
         id,
         title: book.title,
@@ -57,9 +71,28 @@ export function AppProviders({ children }: { children: ReactNode }) {
         addedAt: now,
         updatedAt: now,
         pageCount: book.pageCount,
+        fileSize,
         metadata: book.metadata,
       }
       await storage.addComic(record)
+
+      // Persist the raw archive blob so the reader can reopen the comic
+      // later without re-prompting. URL/directory/images sources skip this:
+      // the reader can re-fetch URLs or re-pick directory/image inputs.
+      const archiveBlob =
+        source.kind === 'file'
+          ? source.file
+          : source.kind === 'blob'
+            ? source.blob
+            : null
+      if (archiveBlob) {
+        try {
+          await storage.setArchiveBlob(id, archiveBlob)
+        } catch (err) {
+          console.warn('Failed to persist archive blob', err)
+        }
+      }
+
       if (book.cover) {
         try {
           const blob = await book.cover.getBlob()
@@ -80,11 +113,28 @@ export function AppProviders({ children }: { children: ReactNode }) {
     )
   }
 
+  const handleThemeChange = (next: ThemePreference) => {
+    setTheme(next)
+    void storage
+      .getPreferences()
+      .then((p) =>
+        storage.setPreferences({
+          theme: next,
+          defaultFitMode: p?.defaultFitMode ?? 'best',
+          defaultReadingDirection: p?.defaultReadingDirection ?? 'ltr',
+          defaultViewMode: p?.defaultViewMode ?? 'single',
+        }),
+      )
+      .catch(() => undefined)
+  }
+
   return (
-    <ExtractorProvider registry={registry}>
-      <LibraryProvider storage={storage} importer={importer}>
-        {children}
-      </LibraryProvider>
-    </ExtractorProvider>
+    <ThemeProvider initialTheme={theme} onChange={handleThemeChange}>
+      <ExtractorProvider registry={registry}>
+        <LibraryProvider storage={storage} importer={importer}>
+          {children}
+        </LibraryProvider>
+      </ExtractorProvider>
+    </ThemeProvider>
   )
 }

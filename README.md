@@ -12,21 +12,27 @@ A local-first, format-agnostic comic archive reader for the web. CBZ-first, plug
 
 > The app is the website. Your library lives in IndexedDB and OPFS on your own machine. We do not upload your comics anywhere.
 
+**Live demo:** https://comic-reader-platform.pages.dev
+
 ## Supported Formats
 
-![CBZ](https://img.shields.io/badge/CBZ-first--class-2ea44f) ![PDF](https://img.shields.io/badge/PDF-in%20progress-yellow) ![CBR](https://img.shields.io/badge/CBR-optional%20plugin-orange) ![CBT](https://img.shields.io/badge/CBT-planned-lightgrey) ![Image folders](https://img.shields.io/badge/Image%20folders-planned-lightgrey)
+![CBZ](https://img.shields.io/badge/CBZ-first--class-2ea44f) ![CBT](https://img.shields.io/badge/CBT-supported-2ea44f) ![PDF](https://img.shields.io/badge/PDF-supported-2ea44f) ![Image folders](https://img.shields.io/badge/Image%20folders-supported-2ea44f) ![CBR](https://img.shields.io/badge/CBR-optional%20plugin-orange)
 
-CBZ is the open default. CBR is shipped as an optional, read-only plugin because RAR compression is proprietary; we deliberately do not implement RAR creation.
+CBZ, CBT, PDF, and image folders are first-class. CBR ships as an optional, read-only plugin because RAR compression is proprietary; we deliberately do not implement RAR creation.
 
 ## Packages
 
 | Package | Purpose |
 | --- | --- |
 | [`@comics-platform/comic-core`](./packages/comic-core) | Format-agnostic types, `ComicExtractor` contract, registry, pure utilities |
-| [`@comics-platform/comic-react`](./packages/comic-react) | React hooks, viewer, library, dropzone, reading-state providers |
-| [`@comics-platform/comic-storage`](./packages/comic-storage) | IndexedDB (Dexie) + OPFS adapters and an in-memory adapter for tests |
+| [`@comics-platform/comic-react`](./packages/comic-react) | React hooks, viewer, library grid, search, panels, theme, providers |
+| [`@comics-platform/comic-storage`](./packages/comic-storage) | IndexedDB (Dexie) + OPFS adapters, in-memory adapter, bookmarks, preferences |
+| [`@comics-platform/comic-worker`](./packages/comic-worker) | Optional Comlink-exposed Web Worker harness for off-main-thread extraction |
 | [`@comics-platform/comic-extractor-zip`](./packages/comic-extractor-zip) | CBZ extractor backed by `@zip.js/zip.js` |
+| [`@comics-platform/comic-extractor-tar`](./packages/comic-extractor-tar) | CBT extractor (pure-TS USTAR parser) |
 | [`@comics-platform/comic-extractor-pdf`](./packages/comic-extractor-pdf) | PDF extractor backed by `pdfjs-dist` |
+| [`@comics-platform/comic-extractor-images`](./packages/comic-extractor-images) | Folders / loose images |
+| [`@comics-platform/comic-extractor-rar`](./packages/comic-extractor-rar) | Optional read-only CBR via `libarchive.js` |
 | [`apps/web`](./apps/web) | Static Next.js 16 SPA shell deployed to Cloudflare Pages |
 
 ## Quick Start
@@ -36,7 +42,9 @@ pnpm install
 pnpm dev:web
 ```
 
-Then open http://localhost:3000, drop a CBZ on the page, and read.
+Then open http://localhost:3000, drop a CBZ / CBT / PDF / image folder on the page, and read. A demo `sample.cbz` is bundled at `apps/web/public/sample.cbz`.
+
+The first run of `pnpm dev:web` and `pnpm build:web` invokes `tools/scripts/copy-vendor-assets.mjs` automatically (via `predev`/`prebuild`) to populate `apps/web/public/vendor/{libarchive,pdfjs}` from `node_modules`. Run `pnpm vendor:copy` manually if you need to refresh those assets.
 
 Requires Node.js 20.9+ (22 LTS recommended) and pnpm 10.
 
@@ -80,7 +88,7 @@ Versions revalidated 2026-05-05:
 | Turbo | 2.9.9 |
 | Wrangler | 4.88.0 |
 
-Supporting libraries: Dexie 4.4.2 (IndexedDB), `@zip.js/zip.js` 2.8.26 (CBZ), `pdfjs-dist` 5.7.284 (PDF).
+Supporting libraries: Dexie 4.4.2 (IndexedDB), `@zip.js/zip.js` 2.8.26 (CBZ), `pdfjs-dist` 5.7.284 (PDF), `libarchive.js` 2.0.2 (CBR), `lucide-react` (icons), Comlink (worker RPC).
 
 ## Cloudflare Deployment
 

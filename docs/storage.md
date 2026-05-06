@@ -8,14 +8,16 @@ The defining constraint: nothing leaves the browser. There is no upload, no tele
 
 ```ts
 import {
-  createDexieStorage,
+  createComicStorage,
   type ComicStorage,
 } from "@comics-platform/comic-storage";
 
-const storage = await createDexieStorage();
+const storage = await createComicStorage();
 // or for tests:
-const storage = await createDexieStorage({ memory: true });
+const storage = await createComicStorage({ memory: true });
 ```
+
+`createComicStorage` is the recommended factory. It returns Dexie+OPFS by default and falls back to an in-memory implementation when `indexedDB` is missing (SSR, Node tests, locked-down browsers). For deterministic test setup, the underlying classes (`DexieComicStorage`, `MemoryComicStorage`, `OpfsBlobStore`) are also exported.
 
 The `ComicStorage` interface:
 
@@ -35,6 +37,15 @@ interface ComicStorage {
   setArchiveBlob(id: string, blob: Blob): Promise<void>;
   getArchiveBlob(id: string): Promise<Blob | undefined>;
 
+  // App-level preferences (theme, default fit, etc.)
+  getPreferences(): Promise<Preferences | undefined>;
+  setPreferences(p: Preferences): Promise<void>;
+
+  // Bookmarks: per-comic, with cascade delete via deleteComic.
+  addBookmark(bm: Bookmark): Promise<void>;
+  listBookmarks(comicId: string): Promise<Bookmark[]>;
+  removeBookmark(id: string): Promise<void>;
+
   clear(): Promise<void>;
 }
 ```
@@ -43,7 +54,7 @@ All methods are async and safe to call from either the main thread or a Web Work
 
 ## IndexedDB schema
 
-The Dexie database is named `comics-platform` (overrideable via `databaseName`). Schema version 1 declares four tables:
+The Dexie database is named `comics-platform` (overrideable via `databaseName`). Schema version 2 declares five tables:
 
 ### `library`
 
@@ -84,7 +95,17 @@ Used as a fallback when OPFS is unavailable.
 
 ### `meta`
 
-Free-form key/value store for installation-wide settings. Currently unused by the platform, available for app-level extensions.
+Free-form key/value store for installation-wide settings. The platform uses the key `"preferences"` to persist user-level theme + reading defaults (`Preferences`).
+
+### `bookmarks` (schema v2)
+
+| Column | Type | Indexed | Notes |
+| --- | --- | --- | --- |
+| `id` | string | primary key | UUID. |
+| `comicId` | string | yes | Cascade-deletes when its parent comic is removed. |
+| `page` | number | no | 0-based page index. |
+| `label` | string | no | Optional. |
+| `createdAt` | ISO string | yes | When the bookmark was added. |
 
 ## OPFS layout
 
@@ -114,7 +135,7 @@ OPFS
   └─ if put/get throws OpfsUnavailableError:
        Dexie blobs table
          └─ if IndexedDB itself is unavailable:
-              in-memory adapter (createDexieStorage({ memory: true }))
+              in-memory adapter (createComicStorage({ memory: true }))
 ```
 
 Each layer is feature-detected, not assumed:

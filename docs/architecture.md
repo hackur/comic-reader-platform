@@ -115,14 +115,27 @@ The worker layer adds one wrinkle. Closures cannot be structured-cloned, so the 
 
 ```text
 user drops file
-   -> apps/web hands a ComicSource to comic-react
-   -> comic-react calls into comic-worker via Comlink
-   -> comic-worker asks ExtractorRegistry to resolve a plugin
-        (ExtractorRegistry.resolve uses detectFormat, which combines
-         filename extension and magic-byte sniffing)
-   -> selected comic-extractor-* opens the archive, returns a ComicBook
-   -> comic-storage persists metadata + the original archive blob
-   -> comic-react renders pages by calling page.getObjectUrl()
+   -> apps/web LibraryProvider.importer
+        -> detectFormat(source)
+        -> ExtractorRegistry.resolve(source)
+             (lazy-loads PDF or RAR plugin if needed,
+              configuring its worker URL against /vendor/...)
+        -> extractor.open(source) -> ComicBook
+        -> comic-storage.addComic(record)
+        -> comic-storage.setArchiveBlob(id, blob)
+        -> comic-storage.setThumbnail(id, coverBlob)
+   -> apps/web/reader page later
+        -> comic-storage.getArchiveBlob(id) -> Blob
+        -> registry.resolve + extractor.open again
+        -> ComicReaderShell renders pages via page.getObjectUrl()
+        -> onPageChange -> library.setLastRead(id, page)
 ```
+
+`comic-worker` is provided as an option for hosts that want to move the
+extraction step off the main thread (large CBR / PDF), but the bundled
+`apps/web` runs extractors directly on the main thread for now. The
+seam is the same either way: the worker exposes the same
+`ExtractorRegistry.resolve + open` shape, and the host swaps in a
+worker client without changes to `comic-react`.
 
 No layer reaches across the diagram. That is the entire point.

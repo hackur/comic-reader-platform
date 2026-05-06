@@ -53,11 +53,11 @@ See [storage.md](./storage.md).
 
 ### How do I export my library?
 
-There is no export UI in v1. The roadmap includes a portable archive export. For now, the data is in IndexedDB and OPFS — accessible via DevTools or via Origin Private File System APIs from a script you run in the browser console.
+The Settings page (`/settings`) has Export and Import buttons that round-trip your library metadata as JSON. Archives and thumbnails are not included — the export is portable text suitable for syncing across devices, but on a fresh device you'll re-import the source files yourself. For a forensic dump, IndexedDB and OPFS are also accessible via browser DevTools.
 
 ### How do I delete my library?
 
-Either delete each comic via the UI, or clear site data for the origin in your browser's settings. The latter wipes IndexedDB and OPFS atomically.
+Use the **Clear local library** button on the Settings page (it deletes every comic, archive, thumbnail, bookmark, and reading state in one go), or remove individual comics from the library grid. As a last resort, clear site data for the origin in your browser settings — that wipes IndexedDB and OPFS atomically.
 
 ### Is anything tracked or logged?
 

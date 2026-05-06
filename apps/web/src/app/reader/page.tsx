@@ -1,10 +1,11 @@
 'use client'
 
-import { Suspense, useEffect, useState } from 'react'
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import type { ComicBook, ComicSource } from '@comics-platform/comic-core'
+import type { ComicBook, ComicSource, ReadingState } from '@comics-platform/comic-core'
 import {
   ComicReaderShell,
+  useComicLibrary,
   useExtractorRegistry,
 } from '@comics-platform/comic-react'
 import { ensurePdfSupport, ensureRarSupport } from '@/lib/extractors'
@@ -15,10 +16,18 @@ function ReaderInner() {
   const params = useSearchParams()
   const id = params.get('id')
   const registry = useExtractorRegistry()
+  const library = useComicLibrary()
 
   const [book, setBook] = useState<ComicBook | null>(null)
+  const [initialState, setInitialState] = useState<Partial<ReadingState> | undefined>(
+    undefined,
+  )
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+
+  // Track the most recent page we have written so we don't spam storage.
+  const lastWrittenRef = useRef<number>(-1)
+  const writeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -35,7 +44,11 @@ function ReaderInner() {
         const record = await storage.getComic(id)
         if (!record) throw new Error('Comic not found in library.')
         const blob = await storage.getArchiveBlob(id)
-        if (!blob) throw new Error('Archive blob missing for this comic.')
+        if (!blob) {
+          throw new Error(
+            'Archive blob missing — try re-importing the comic from the home page.',
+          )
+        }
 
         if (record.format === 'pdf') {
           await ensurePdfSupport(registry)
@@ -50,8 +63,23 @@ function ReaderInner() {
         }
         const extractor = await registry.resolve(source)
         const extracted = await extractor.open(source)
+
+        // Reading-state defaults: prefer per-comic saved state, then global
+        // preferences, then library defaults.
+        const savedState = await storage.getReadingState(id)
+        const prefs = await storage.getPreferences()
+        const start: Partial<ReadingState> = {
+          currentPage: savedState?.currentPage ?? record.lastReadPage ?? 0,
+          fitMode: savedState?.fitMode ?? prefs?.defaultFitMode ?? 'best',
+          readingDirection:
+            savedState?.readingDirection ?? prefs?.defaultReadingDirection ?? 'ltr',
+          viewMode: savedState?.viewMode ?? prefs?.defaultViewMode ?? 'single',
+        }
+
         if (cancelled) return
         setBook(extracted)
+        setInitialState(start)
+        lastWrittenRef.current = start.currentPage ?? 0
       } catch (err) {
         if (cancelled) return
         setError(err instanceof Error ? err.message : 'Failed to open comic.')
@@ -64,6 +92,26 @@ function ReaderInner() {
       cancelled = true
     }
   }, [id, registry])
+
+  // Debounced last-read writer.
+  const handlePageChange = useCallback(
+    (page: number) => {
+      if (!id) return
+      if (page === lastWrittenRef.current) return
+      if (writeTimerRef.current) clearTimeout(writeTimerRef.current)
+      writeTimerRef.current = setTimeout(() => {
+        lastWrittenRef.current = page
+        void library.setLastRead(id, page).catch(() => undefined)
+      }, 400)
+    },
+    [id, library],
+  )
+
+  useEffect(() => {
+    return () => {
+      if (writeTimerRef.current) clearTimeout(writeTimerRef.current)
+    }
+  }, [])
 
   if (loading) {
     return (
@@ -103,8 +151,14 @@ function ReaderInner() {
   }
 
   return (
-    <main className="min-h-screen">
-      <ComicReaderShell book={book} onClose={() => router.push('/')} />
+    <main className="min-h-screen p-3 sm:p-4">
+      <ComicReaderShell
+        book={book}
+        initialState={initialState}
+        onClose={() => router.push('/')}
+        onPageChange={handlePageChange}
+        enableBookmarks
+      />
     </main>
   )
 }

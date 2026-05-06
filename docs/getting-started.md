@@ -21,8 +21,8 @@ corepack prepare pnpm@10 --activate
 ## Install
 
 ```bash
-git clone https://github.com/<your-org>/comics.git
-cd comics
+git clone https://github.com/hackur/comic-reader-platform.git
+cd comic-reader-platform
 pnpm install
 ```
 
@@ -92,13 +92,13 @@ If you need a Workers / SSR target instead — for example, to add server-side s
 
 ## Troubleshooting
 
-### PDF.js worker fails to load
+### Vendor assets (libarchive WASM, pdf.js worker) 404
 
-Symptom: opening a PDF logs `Setting up fake worker failed` or `Failed to fetch dynamically imported module: pdf.worker.min.mjs`.
+Symptom: opening a CBR throws `WebAssembly.instantiate(): expected magic word 00 61 73 6d, found …` (the bytes are an HTML "Not Found" body), or opening a PDF logs `Setting up fake worker failed`.
 
-Cause: the PDF extractor (`@comics-platform/comic-extractor-pdf`) needs an absolute URL to `pdf.worker.min.mjs` at runtime. The package tries to derive one via `import.meta.url`, but that fails when the bundler emits the worker chunk under an unexpected path or when the page is served from `file://`.
+Cause: `libarchive.js` and `pdfjs-dist` ship runtime worker + wasm assets that Next/Turbopack does not copy from `node_modules` automatically. The platform vendors them into `apps/web/public/vendor/{libarchive,pdfjs}/` and points the extractors at those URLs.
 
-Fix: call `configurePdfWorker(url)` once at startup, pointing at the worker asset emitted by your bundler. With Next.js, the simplest approach is to copy `pdfjs-dist/build/pdf.worker.min.mjs` into `apps/web/public/` and call `configurePdfWorker('/pdf.worker.min.mjs')` in a top-level client component.
+Fix: the copy is wired into `pnpm dev:web` and `pnpm build:web` via `predev`/`prebuild` hooks (see `tools/scripts/copy-vendor-assets.mjs`). If the vendor dir is missing — for example after a fresh clone where you ran `next dev` directly — run `pnpm vendor:copy` manually or `pnpm dev:web` once. To override the URLs (custom CDN, sub-path deploy), call `configurePdfWorker(src)` and `configureRarWorker(workerUrl)` from `@comics-platform/comic-extractor-{pdf,rar}` in your app entry.
 
 ### OPFS not available in private/incognito mode
 
@@ -107,14 +107,6 @@ Symptom: comics open but archive blobs are not persisted across reloads; deletin
 Cause: most browsers disable OPFS in private/incognito sessions, and Safari versions before 17.4 had partial support. The platform feature-detects OPFS and silently falls back to storing blobs in Dexie's `blobs` table when OPFS is missing. Functionality is preserved, but very large archives may exceed IndexedDB quota.
 
 Fix: nothing to do — the fallback is automatic. For local development, reproduce the OPFS path by running in a normal (non-private) window. To force the fallback in tests, pass `{ disableOpfs: true }` to `createDexieStorage`.
-
-### libarchive.js worker URL is wrong
-
-Symptom: opening a `.cbr` throws `Failed to construct 'Worker': Script at 'http://...' cannot be accessed from origin 'null'.` or a 404 for `wasm-gen/libarchive.js`.
-
-Cause: `libarchive.js` ships its decoding logic in a Web Worker plus a WebAssembly file. Both need to be reachable at the URL the library expects. Bundlers that copy assets to a hashed path will break the default loader.
-
-Fix: when initializing the RAR extractor, set `Archive.init({ workerUrl: '/libarchive/worker.js' })` (or wherever you have the library's worker copied to in your `public/` directory). Self-host the worker and the `.wasm` file together; do not load them from a CDN unless you trust that origin and have CSP rules to match.
 
 ### IndexedDB is blocked or quota-exceeded
 
