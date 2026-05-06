@@ -1,3 +1,11 @@
+<p align="center">
+  <img src="apps/web/public/logo.svg" alt="Comic Reader Platform" width="96" height="96" />
+</p>
+
+<p align="center"><strong>Comic Reader Platform</strong> — a local-first, format-agnostic comic archive reader for the web.</p>
+
+<p align="center">CBZ, CBT, PDF, and image folders are first-class. CBR ships as an optional plugin. See the <a href="./docs">/docs</a> for architecture and extractor authoring.</p>
+
 # Comic Reader Platform
 
 A local-first, format-agnostic comic archive reader for the web. CBZ-first, plugin-based, and built so your library never leaves your browser.

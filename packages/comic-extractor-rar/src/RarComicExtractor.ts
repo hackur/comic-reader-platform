@@ -40,6 +40,33 @@ interface LibArchiveModule {
   };
 }
 
+let configuredWorkerUrl: string | null = null;
+let initialized = false;
+
+/**
+ * Configure the libarchive.js worker URL. Must be called once before the
+ * first `RarComicExtractor.open` call in static-export deployments where
+ * the bundler does not auto-resolve worker assets from `node_modules`.
+ *
+ * @param workerUrl URL (absolute or root-relative) to libarchive.js's
+ *   `worker-bundle.js`. The matching `libarchive.wasm` must sit alongside
+ *   it (same directory).
+ */
+export function configureRarWorker(workerUrl: string): void {
+  configuredWorkerUrl = workerUrl;
+  initialized = false;
+}
+
+function ensureInitialized(Archive: LibArchiveModule["Archive"]): void {
+  if (initialized) return;
+  if (typeof Archive.init === "function") {
+    const workerUrl =
+      configuredWorkerUrl ?? "/vendor/libarchive/worker-bundle.js";
+    Archive.init({ workerUrl });
+  }
+  initialized = true;
+}
+
 function getLib(): LibArchiveModule {
   // libarchive.js exports differ between bundler interop modes
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -143,6 +170,7 @@ export class RarComicExtractor implements ComicExtractor {
     opts?.onProgress?.({ loaded: 0, phase: "loading" });
 
     const { Archive } = getLib();
+    ensureInitialized(Archive);
     const blob = await sourceToBlob(source);
 
     let archive: Awaited<ReturnType<typeof Archive.open>>;

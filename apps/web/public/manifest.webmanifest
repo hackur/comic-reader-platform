@@ -1,0 +1,12 @@
+{
+  "name": "Comic Reader Platform",
+  "short_name": "Comics",
+  "description": "Local-first comic reader for CBZ, CBT, PDF, images, and (optionally) CBR",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fff9f0",
+  "theme_color": "#0ea5e9",
+  "icons": [
+    { "src": "/logo.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

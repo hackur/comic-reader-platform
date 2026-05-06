@@ -34,9 +34,10 @@ export function configurePdfWorker(src: string): void {
   }
 }
 
-// Best-effort default worker URL using import.meta.url. In SSR or non-bundler
-// contexts this will throw at evaluation time; we swallow and let consumers
-// configure manually via configurePdfWorker.
+// Best-effort default worker URL for static-export browser deployments.
+// If a workerSrc has already been set (e.g. by `configurePdfWorker`), we
+// leave it alone. Otherwise we point at the path produced by
+// tools/scripts/copy-vendor-assets.mjs.
 function tryAutoConfigureWorker(): void {
   try {
     const g = (pdfjs as unknown as {
@@ -44,15 +45,14 @@ function tryAutoConfigureWorker(): void {
     }).GlobalWorkerOptions;
     if (g.workerSrc) return;
     if (typeof window === "undefined") return;
-    const url = new URL(
-      "pdfjs-dist/build/pdf.worker.min.mjs",
-      import.meta.url,
-    );
-    g.workerSrc = url.toString();
+    g.workerSrc = "/vendor/pdfjs/pdf.worker.min.mjs";
   } catch {
     /* consumer must call configurePdfWorker */
   }
 }
+
+const PDF_CMAP_URL = "/vendor/pdfjs/cmaps/";
+const PDF_STANDARD_FONTS_URL = "/vendor/pdfjs/standard_fonts/";
 
 function getName(source: ComicSource): string {
   switch (source.kind) {
@@ -140,10 +140,15 @@ export class PdfComicExtractor implements ComicExtractor {
     const data = await sourceToData(source);
     let doc: PDFDocumentProxy;
     try {
+      const commonOpts = {
+        cMapUrl: PDF_CMAP_URL,
+        cMapPacked: true,
+        standardFontDataUrl: PDF_STANDARD_FONTS_URL,
+      };
       const loadingTask =
         typeof data === "string"
-          ? pdfjs.getDocument({ url: data })
-          : pdfjs.getDocument({ data: new Uint8Array(data) });
+          ? pdfjs.getDocument({ url: data, ...commonOpts })
+          : pdfjs.getDocument({ data: new Uint8Array(data), ...commonOpts });
       // pdf.js exposes loading progress on the task
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (loadingTask as any).onProgress = (p: { loaded: number; total: number }) => {

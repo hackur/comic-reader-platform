@@ -1,1 +1,4 @@
-export { RarComicExtractor } from "./RarComicExtractor.js";
+export {
+  RarComicExtractor,
+  configureRarWorker,
+} from "./RarComicExtractor.js";

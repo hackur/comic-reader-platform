@@ -66,11 +66,40 @@ if (await extractor.canOpen({ kind: "file", file })) {
   via `@comics-platform/comic-extractor-zip` is the recommended default
   path and has no comparable legal caveats.
 
+## Worker setup
+
+`libarchive.js` runs its WebAssembly decoder inside a dedicated Web
+Worker. The worker bundle (`worker-bundle.js`) and the WASM blob
+(`libarchive.wasm`) ship inside the `libarchive.js` package on npm but
+are **not** auto-resolved by most bundlers / static-export setups.
+
+This package exposes `configureRarWorker(workerUrl)` which forwards to
+`Archive.init({ workerUrl })`. Call it once at startup with a URL that
+points to a copy of `worker-bundle.js` you have hosted; the matching
+`libarchive.wasm` MUST sit next to it (same directory) so the worker
+can load it via a sibling-relative URL.
+
+```ts
+import {
+  RarComicExtractor,
+  configureRarWorker,
+} from "@comics-platform/comic-extractor-rar";
+
+configureRarWorker("/vendor/libarchive/worker-bundle.js");
+const extractor = new RarComicExtractor();
+```
+
+If you don't call `configureRarWorker`, the extractor defaults to
+`/vendor/libarchive/worker-bundle.js`, which lines up with the
+`tools/scripts/copy-vendor-assets.mjs` helper used by the reference
+web app to stage these assets into `apps/web/public/vendor/`.
+
 ## API
 
 | Export | Description |
 | --- | --- |
 | `RarComicExtractor` | Class implementing `ComicExtractor` for `.cbr` / `.rar`. |
+| `configureRarWorker(url)` | Set the libarchive.js worker URL (calls `Archive.init`). |
 
 ## Peer dependencies
 

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Comic Reader Platform">
+  <title>Comic Reader Platform</title>
+  <!-- Page back layer (offset, for the stacked-page effect) -->
+  <path d="M16 12 L42 12 L52 22 L52 50 L16 50 Z" fill="currentColor" fill-opacity="0.08" />
+  <!-- Page front: rectangle with folded corner -->
+  <path d="M10 8 L36 8 L46 18 L46 46 L10 46 Z" fill="currentColor" fill-opacity="0.04" />
+  <!-- Folded corner crease -->
+  <path d="M36 8 L36 18 L46 18" />
+  <!-- Speech bubble nestled inside the page -->
+  <path d="M16 20 L40 20 Q42 20 42 22 L42 34 Q42 36 40 36 L26 36 L20 42 L21 36 L18 36 Q16 36 16 34 L16 22 Q16 20 18 20 Z" fill="currentColor" fill-opacity="0.12" />
+  <!-- Three dots inside bubble (the "..." of dialog) -->
+  <circle cx="22" cy="28" r="1.6" fill="currentColor" stroke="none" />
+  <circle cx="29" cy="28" r="1.6" fill="currentColor" stroke="none" />
+  <circle cx="36" cy="28" r="1.6" fill="currentColor" stroke="none" />
+</svg>

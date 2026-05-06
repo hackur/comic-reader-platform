@@ -7,9 +7,12 @@
   },
   "scripts": {
     "build": "next build",
+    "prebuild": "node ../../tools/scripts/copy-vendor-assets.mjs",
     "dev": "next dev",
+    "predev": "node ../../tools/scripts/copy-vendor-assets.mjs",
     "lint": "eslint .",
     "start": "next start",
+    "test:e2e": "playwright test",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
